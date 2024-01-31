@@ -1,0 +1,110 @@
+1) class admin
+- admin_username: varchar(20) [unique]
+- admin_password: varchar(20)
+- admin_authentication_token: enum{admin, rescuer, citizen}
+
+2) class rescuer
+- rescuer_username: varchar(20) [unique]
+- rescuer_password: varchar(20)
+- rescuer_authentication_token: enum{admin, rescuer, citizen}
+- rescuer_latitude DECIMAL(10, 8), -- Decimal for latitude
+- rescuer_longitude DECIMAL(11, 8) -- Decimal for longitude
+
+3) class citizen
+- citizen_username: varchar(20) [unique]
+- citizen_password: varchar(20)
+- citizen_authentication_token: enum{admin, rescuer, citizen}
+- citizen_name: varchar(20)
+- citizen_surname: varchar(20)
+- citizen_phone: smallint
+- citizen_latitude DECIMAL(10, 8), -- Decimal for latitude
+- citizen_longitude DECIMAL(11, 8) -- Decimal for longitude
+
+4) class category 
+- category_id: int
+- category_name: varchar(20)
+
+5) class item 
+- item_id: int
+- item_name: varchar(20)
+- item_details: varchar(100)
+- category_id: varchar(20) {foreign key}
+[- category_name [inherited]]
+- date_added: datetime (?)
+- amount: int 
+- status: enum{vehicle, storage}
+
+6) class storage
+- storage_latitude DECIMAL(10, 8), -- Decimal for latitude
+- storage_longitude DECIMAL(11, 8), -- Decimal for longitude
+- item_id: int {foreign key}
+[- item_name: varchar(20) [inherited]]
+[- item_category: varchar(20) [inherited]]
+
+7) class vehicle
+- vehicle_id: int
+- vehicle_latitude DECIMAL(10, 8), -- Decimal for latitude
+- vehicle_longitude DECIMAL(11, 8), -- Decimal for longitude
+- vehicle_name: varchar(20) 
+- status: enum{free, occupied}
+- number_of_tasks: smallint (max 4)
+[- request_id: int [inherited]]
+[- offer_id: int [inherited]]
+
+8) class request (μπορεί να χρειαστεί να γίνει merge με offer + class με διαφορές)
+- request_id: int
+- status: enum{completed, pending, acquired, canceled}
+- request_date: datetime (ποτε έγινε η δήλωση)
+- acquisition_date: datetime (πότε έγινε η ανάληψη)
+- completion_date: datetime (πότε ολοκληρώθηκε)
+- cancelation_date: datetime (πότε ακυρώθηκε)
+- citizen_username: varchar(20) {foreign key}
+[- citizen_name: varchar(20) [inherited]]
+[- citizen_surname: varchar(20) [inherited]] 
+[- citizen_phone: varchar(10) [inherited]]
+[- citizen_position: (coordinate datatype)]
+- item_id: int {foreign key}
+[- item_name: varchar(20) [inherited]]
+- requested_item_amount: int
+- starting_date: datetime (?)
+- vehicle_id {foreign key}
+[- vehicle_name: varchar(20) [inherited]]
+- rescuer_username: varchar(20) {foreign key}
+- number_of_citizens_involved: smallint
+
+9) class offer
+- offer_id: int
+- status: enum{completed, pending, acquired, canceled}
+- offer_date: datetime (ποτε έγινε η δήλωση)
+- acquisition_date: datetime (πότε έγινε η ανάληψη)
+- completion_date: datetime (πότε ολοκληρώθηκε)
+- cancelation_date: datetime (πότε ακυρώθηκε)
+- citizen_username: varchar(20) {foreign key}
+[- citizen_name: varchar(20) [inherited]]
+[- citizen_surname: varchar(20) [inherited]]
+[- citizen_phone: : varchar(10) [inherited]]
+[- citizen_position: (coordinate datatype)]
+- item_id: int {foreign key}
+[- item_name: varchar(20) [inherited]]
+- offered_item_amount: int
+- starting_date: datetime (?)
+- vehicle_id {foreign key}
+[- vehicle_name: varchar(20) [inherited]]
+- rescuer_username: varchar(20) {foreign key}
+
+? (πρέπει να το δούμε στην υλοποίηση)
+10) class map
+- position_id: int 
+- position: (coordinate datatype)
+- request_id: int {foreign key}
+- offer_id: int {foreign key}
+- vehicle_id: int {foreign key}
+
+? (θα είναι πεδία αλλά ιδκ)
+11) class announcement
+- announcement_id: int
+- announcement_title: varchar(100)
+- announcement_date: datetime
+- item_id: int {foreign key}
+[- item_name: varchar(20) [inherited]]
+- announcement_item_quantity: varchar(20)

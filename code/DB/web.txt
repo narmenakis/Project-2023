@@ -1,0 +1,95 @@
+class admin
+- admin_username
+- admin_password
+- admin_authentication_token
+
+class rescuer
+- rescuer_username
+- rescuer_password
+- rescuer_authentication_token
+- rescuer_position?
+
+class citizen
+- citizen_username
+- citizen_password
+- citizen_authentication_token
+- citizen_name
+- citizen_surname
+- citizen_phone
+- citizen_position
+
+class item 
+- item_id ?
+- item_name
+- item_category
+- quantity
+- status: vehicle, storage
+
+class storage
+- item_id
+- item_name
+- item_category  
+
+class vehicle
+- vehicle_id
+- position
+- vehicle_name
+- status: free, occupied
+- number_of_tasks (max 4)
+- request_id
+- offer_id
+
+class request (μπορεί να χρειαστεί να γίνει merge με offer + class με διαφορές)
+- request_id
+- status: completed, pending, acquired, canceled
+- request_date (ποτε έγινε η δήλωση)
+- acquisition_date (πότε έγινε η ανάληψη)
+- completion_date (πότε ολοκληρώθηκε)
+- cancelation_date (πότε ακυρώθηκε)
+- citizen_name 
+- citizen_surname
+- citizen_phone
+- item_name
+- item_amount
+- starting_date (?)
+- vehicle_name (δε θα ναι σαν ορισμα αλλα θα παίρνεται από κάποιο join)
+- rescuer_name
+- number_of_citizens_involved
+- citizen_position
+
+class offer
+- offer_id
+- status: completed, pending, acquired, canceled
+- offer_date (ποτε έγινε η δήλωση)
+- acquisition_date (πότε έγινε η ανάληψη)
+- completion_date (πότε ολοκληρώθηκε)
+- cancelation_date (πότε ακυρώθηκε)
+- citizen_name
+- citizen_surname
+- citizen_phone
+- item_name
+- item_amount
+- starting_date (?)
+- vehicle_name (δε θα ναι σαν ορισμα αλλα θα παίρνεται από κάποιο join)
+- rescuer_name
+- citizen_position
+
+class map
+- position
+- request_id
+- offer_id
+- vehicle_id
+
+class announcement
+- announcement_id
+- announcement_title
+- item_name
+- item_quantity
+- item_id
+- position
+
+
+
+
+
+
