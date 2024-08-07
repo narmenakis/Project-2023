@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome Screen</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <div id="welcomeContainer">
+        <h1>Πλατφόρμα συντονισμού εθελοντών κατά τη διάρκεια φυσικών καταστροφών</h1>
+    </div>
+
+    <div id="loginContainer">
+        <h2>Παρακαλώ συνδεθείτε για να συνεχίσετε</h2>
+        <form action="javascript:login()">
+            <!-- Login form content -->
+        </form>
+        <p id="loginStatus"></p>
+    </div>
+
+    <div id="menuContainer">
+        <!-- Menu options -->
+    </div>
+
+    <div id="mapPanel">
+        <!-- Map panel content -->
+    </div>
+
+    <div id="tasksPanel">
+        <!-- Tasks panel content -->
+    </div>
+
+    <div id="loadManagementPanel">
+        <h2>Διαχείριση Φορτίου</h2>
+        <!-- Load management panel content -->
+    </div>
+
+    <script src="https://maps.googleapis.com/maps/api/js?key=ΤΟ_API_KEY_ΣΑΣ&callback=initMap" async defer></script>
+    <script src="script.js"></script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+#customButtonsContainer {
+    /* CSS for custom buttons container */
+}
+
+/* Other styles... */
+
+#taskOptions button:hover {
+    background-color: #ff7300;
+    color: #fff;
+}
+
+
+
+
+
+
+function login() {
+    // JavaScript code for login function
+}
+
+function showMap() {
+    // JavaScript code for showing map panel
+}
+
+function showTasksPanel() {
+    // JavaScript code for showing tasks panel
+}
+
+function showLoadManagementPanel() {
+    // JavaScript code for showing load management panel
+}
+
+function hideAllPanels() {
+    // JavaScript code for hiding all panels
+}
+
+function initMap() {
+    // JavaScript code for initializing the map
+}
+
