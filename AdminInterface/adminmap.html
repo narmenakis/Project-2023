@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Community Assist Hub</title>
+<link rel="stylesheet" href="admin.css">
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAI86EPjzP-LcmkJc3N9vFP0q3yUS73CNc&callback=initMap" async defer></script>
+
+
+
+<script>
+    function initMap() {
+      var map = new google.maps.Map(document.getElementById('map-container'), {
+        center: { lat: 0, lng: 0 },
+        zoom: 50
+    
+      });
+
+       // Get the user's current location
+       if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            function (position) {
+                var userLocation = {
+                    lat: position.coords.latitude,
+                    lng: position.coords.longitude
+                };
+
+                // Center the map on the user's location
+                map.setCenter(userLocation);
+
+                // Add a marker at the user's location
+                var marker = new google.maps.Marker({
+                    position: userLocation,
+                    map: map,
+                    title: 'Your Location'
+                });
+            },
+            function (error) {
+                console.error("Error getting user location:", error);
+            }
+        );
+    } else {
+        console.error("Geolocation is not supported by this browser.");
+    }
+}
+
+
+    
+  </script>
+</head>
+<body>
+
+    <div class="topnav">
+        <a href="homepage.html">Home</a>
+        <a href="storage.html">Storage</a>
+        <a href="statistics.html">Statistics</a>
+        <a  class="active" href="#addrescuers">Add Rescuers</a>
+        <a href="announcements.html">Announcements</a>
+        <a href="signin.html">Sign In</a>
+        <a href="signin.html"><u>Log Out</u></a>
+      </div>
+
+      <h1 class="title">Admin Map Page</h1>
+    
+      
+       <div id="map-container"  style="height: 500px;"> </div>
+          <div id="form-container">
+          <h2>Φόρμα</h2>
+          <form>
+            'Προσφορά: Όνομα Πολίτη, Τηλέφωνο, Ημερομηνία, Είδος, Ποσότητα, Ημερομηνία Ανάληψης, Όνομα Οχήματος'
+           </form>
+           </div>
+     
+</body>
+</html>

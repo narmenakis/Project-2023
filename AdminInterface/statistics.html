@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <title>Community Assist Hub</title>
+<link rel="stylesheet" href="admin.css">
+</head>
+<body>
+
+    <div class="topnav">
+        <a href="homepage.html">Home</a>
+        <a href="storage.html">Storage</a>
+        <a class="active" href="#statistics">Statistics</a>
+        <a href="adminmap.html">Add Rescuers</a>
+        <a href="announcements.html">Announcements</a>
+        <a href="signin.html">Sign In</a>
+        <a href="signin.html"><u>Log Out</u></a>
+      </div>
+</head>
+<body>
+
+ <h1 class="title">Admin Statistics Page</h1>
+
+        <label for="timePeriod"><h4>Select Time Period:</h4></label>
+        <select id="timePeriod">
+            <option value="daily">Daily</option>
+            <option value="weekly">Weekly</option>
+            <option value="monthly">Monthly</option>
+        </select>
+        
+        <div id="chart"></div>
+
+
+<script>
+    // add js code (h metabliti einai h "data")
+
+    // Παράδειγμα:
+    var data = [{
+        x: ['New Requests', 'New Offers', 'Completed Requests', 'Completed Offers'],
+        y: [10, 8, 15, 12],
+        type: 'bar'
+    }];
+
+    var layout = {
+       
+        xaxis: {
+            title: 'Categories'
+        },
+        yaxis: {
+            title: 'No.'
+        }
+    };
+
+    Plotly.newPlot('chart', data, layout);
+</script>
+
+</body>
+</html>
