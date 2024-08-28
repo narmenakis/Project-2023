@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Welcome Page</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            
+
+
+        <script>
+            function validateForm() {
+                const checkbox = document.getElementById('shareLocation');
+                const latitude = document.getElementById('latitude');
+                const longitude = document.getElementById('longitude');
+    
+                if (checkbox.checked) {
+                    if (!latitude.value || !longitude.value) {
+                        alert("Please allow location access.");
+                        return false;
+                    }
+                } else {
+                    alert("You must allow location to sign in.");
+                    return false;
+                }
+                return true;
+            }
+    
+            function getLocation() {
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(showPosition, showError);
+                } else {
+                    alert("Geolocation is not supported by this browser.");
+                }
+            }
+    
+            function showPosition(position) {
+                document.getElementById("latitude").value = position.coords.latitude;
+                document.getElementById("longitude").value = position.coords.longitude;
+                alert("Location has been set.");
+            }
+    
+            function showError(error) {
+                switch(error.code) {
+                    case error.PERMISSION_DENIED:
+                        alert("User denied the request for Geolocation.");
+                        break;
+                    case error.POSITION_UNAVAILABLE:
+                        alert("Location information is unavailable.");
+                        break;
+                    case error.TIMEOUT:
+                        alert("The request to get user location timed out.");
+                        break;
+                    case error.UNKNOWN_ERROR:
+                        alert("An unknown error occurred.");
+                        break;
+                }
+            }
+        </script>
+
+
+
+
+            <h1>Sign Up Form</h1>
+
+            <form action="process-signup.php" method="post" novalidate>
+            <div>
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username">
+            </div>    
+                
+            <div>
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password">
+            </div> 
+            
+            <div>
+                <label for="password_confirmation"> Repeat Password</label>
+                <input type="password" id="password_confirmation" name="password_confirmation">
+            </div> 
+
+
+            <div>
+                <label for="authentication_token">Role:</label>
+                <select id="authentication_token" name="authentication_token">
+                    <option value="admin">Admin</option>
+                    <option value="rescuer">Rescuer</option>
+                    <option value="citizen">Citizen</option>
+                </select><br>
+            </div>
+
+            <div>
+                <label for="name">First Name</label>
+                <input type="text" id="firstname" name="firstname">
+            </div>
+            
+            <div>
+                <label for="surname">Last Name</label>
+                <input type="text" id="surname" name="surname">
+            </div> 
+            
+            <div>
+                <label for="phonenumber">Phone Number</label>
+                <input type="tel" id="phonenumber" name="phonenumber">
+            </div> 
+
+            <div>
+        <input type="hidden" id="latitude" name="latitude">
+        <input type="hidden" id="longitude" name="longitude">
+         <!-- Checkbox για επιλογή τοποθεσίας -->
+         <input type="checkbox" id="shareLocation" name="shareLocation" onclick="getLocation()">
+         <label for="shareLocation">Allow Location</label><br>
+            </div>
+
+            <button>Sign Up</button>
+
+            </form>
+
+
+
+            <h1>Already a member?</h1>
+
+            <p>  Please  <a href="login.php">log in</a> to proceed.  </p>
+    
+    
+
+
+
+
+
+
+        </body>
+    </head>
+</html>
