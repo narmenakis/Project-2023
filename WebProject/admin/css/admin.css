@@ -1,0 +1,246 @@
+/* General Page Styling */
+body {
+    font-family: 'Arial', sans-serif;
+    background: linear-gradient(to bottom right, #faf0e6, #f5f5dc); /* Light beige to beige gradient */
+    color: #333; /* Default text color */
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    min-height: 100vh;
+    box-sizing: border-box;
+}
+
+/* Header Styling */
+h1, h2 {
+    color: #ff7043; /* Orange color for headers */
+    font-weight: normal; /* Minimal weight */
+    padding-top: 10px; /* Padding to ensure it's not hidden by a fixed navbar */
+}
+
+h1.h1-new {
+    text-align: left; /* Align text to the left */
+    margin: 20px auto; /* Center the box and provide space around it */
+    font-size: 2rem; /* Adjust font size as needed */
+    padding: 20px; /* Padding inside the box */
+    background-color: #fff; /* White background for the box */
+    border: 1px solid #ddd; /* Light border around the box */
+    border-radius: 8px; /* Rounded corners */
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); /* Subtle shadow for modern look */
+    max-width: 90%; /* Limit the width of the box */
+}
+
+/* Navigation bar styling */
+.topnav {
+    width: 100%; /* Full width of the viewport */
+    background-color: #fff; /* White background for the navigation bar */
+    border-bottom: 1px solid #ddd; /* Light border at the bottom */
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); /* Slight shadow */
+    padding: 10px 0; /* Vertical padding */
+    position: sticky; /* Fix the navigation bar to the top */
+    top: 0; /* Align to the top of the viewport */
+    left: 0; /* Align to the left edge of the viewport */
+    z-index: 1000; /* Ensure it stays above other content */
+    display: flex; /* Flexbox for alignment */
+    justify-content: space-around; /* Space between items */
+}
+
+.topnav a {
+    color: #ff7043; /* Orange color for links */
+    padding: 14px 20px;
+    text-decoration: none;
+    font-size: 1rem;
+    text-align: center;
+    border-radius: 4px; /* Rounded corners for links */
+    display: inline-block; /* Make links inline-block for spacing */
+}
+
+/* Active link styling */
+.topnav a.active {
+    background-color: #ff7043; /* Highlighted background for active link */
+    color: white;
+}
+
+/* Hover effect for links */
+.topnav a:hover {
+    background-color: #e64a19; /* Darker orange on hover */
+    color: white;
+}
+
+/* Announcement Container Styling */
+#announcementsContainer {
+    width: 100%;
+    max-width: 900px; /* Limit the width */
+    margin: 20px auto; /* Center the container */
+    padding: 20px;
+    background-color: #fff; /* White background for announcements */
+    border-radius: 8px; /* Rounded corners */
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); /* Subtle shadow for modern look */
+}
+
+.announcement {
+    border: 1px solid #ddd; /* Light border around each announcement */
+    border-radius: 8px; /* Rounded corners */
+    padding: 15px;
+    margin-bottom: 15px; /* Space between announcements */
+    background-color: #f9f9f9; /* Slightly off-white background */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+}
+
+.announcement h3 {
+    margin-top: 0; /* Remove top margin */
+    font-size: 1.5rem; /* Slightly larger font size for titles */
+}
+
+.announcement p {
+    margin: 5px 0; /* Space around paragraphs */
+}
+
+.offer-button {
+    background-color: #ff7043; /* Orange for the button */
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background-color 0.3s;
+}
+
+.offer-button:hover {
+    background-color: #e64a19; /* Darker orange on hover */
+}
+
+/* Form Styling */
+form {
+    width: 100%;
+    margin-bottom: 20px;
+    background-color: #fff; /* White background for the form */
+    padding: 20px;
+    border-radius: 8px; /* Rounded corners */
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+}
+
+form div {
+    margin-bottom: 15px;
+}
+
+label {
+    display: block;
+    margin-bottom: 5px;
+    color: #000; /* Black for labels */
+    font-weight: bold;
+}
+
+input[type="text"],
+input[type="number"],
+input[type="hidden"] {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #333; /* Black border for input fields */
+    border-radius: 4px;
+    box-sizing: border-box;
+    font-size: 1rem;
+    color: #333;
+}
+
+input[type="text"]:focus,
+input[type="number"]:focus {
+    outline: none;
+    border-color: #ff7043; /* Orange border on focus */
+    box-shadow: 0 0 8px rgba(255, 112, 67, 0.2);
+}
+
+button {
+    background-color: #ff7043; /* Orange for the button */
+    color: white;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    width: 100%;
+    font-size: 1rem;
+    transition: background-color 0.3s;
+}
+
+button:hover {
+    background-color: #e64a19; /* Darker orange on hover */
+}
+
+/* Table Styling */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    background-color: #fff; /* White background for the table */
+    border-radius: 8px; /* Rounded corners */
+    overflow: hidden; /* Ensure borders and corners are visible */
+}
+
+table, th, td {
+    border: 1px solid #ddd;
+}
+
+th, td {
+    padding: 10px;
+    text-align: left;
+}
+
+th {
+    background-color: #f5f5f5;
+}
+
+/* Modal Styling */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.4);
+}
+
+.modal-content {
+    background-color: #fff;
+    margin: 15% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%;
+    max-width: 400px;
+    border-radius: 8px; /* Rounded corners */
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+}
+
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+/* Mobile responsive styling */
+@media (max-width: 600px) {
+    h1, h2 {
+        font-size: 1.5rem;
+    }
+
+    .topnav a {
+        padding: 10px;
+        font-size: 0.9rem;
+    }
+
+    table, th, td {
+        font-size: 0.9rem; /* Adjust table font size for small screens */
+    }
+}

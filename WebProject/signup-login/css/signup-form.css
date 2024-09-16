@@ -1,0 +1,141 @@
+/* General page styling */
+body {
+    font-family: 'Arial', sans-serif;
+    background: linear-gradient(to bottom right, #faf0e6, #f5f5dc); /* Light beige to beige gradient */
+    color: #333; /* Default text color */
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    min-height: 100vh;
+}
+
+/* Header Styling */
+h1 {
+    color: #ff7043; /* Orange for headers */
+    font-size: 2rem; /* Slightly increased size */
+    text-align: center;
+    margin-top: 10px; /* Reduced top margin */
+    margin-bottom: 10px; /* Reduced bottom margin */
+    font-weight: normal; /* Minimal weight */
+}
+
+/* Styling for headers with a box around them */
+.boxed-header {
+    background-color: #fff; /* White background for the box */
+    border: 1px solid #333; /* Thin black border for the form */
+    border-radius: 8px; /* Rounded corners */
+    padding: 10px 20px; /* Padding inside the box */
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); /* Slight shadow for better visual effect */
+    display: inline-block; /* Make the box wrap around the text */
+    margin: 10px 0; /* Margin around the box */
+}
+
+/* h2 Styling */
+h2 {
+    color: #333; /* Black for subheader */
+    text-align: center;
+    font-size: 1.5rem; /* Normal size */
+    margin-top: 10px; /* Reduced top margin */
+    margin-bottom: 10px; /* Reduced bottom margin */
+    font-weight: normal; /* Keep it light */
+}
+
+/* Container for the form */
+form {
+    background-color: #fff; /* White background for form */
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    width: 400px;
+    margin: 20px auto;
+    border: 1px solid #333; /* Thin black border for the form */
+}
+
+form div {
+    margin-bottom: 15px;
+}
+
+/* Label styling */
+label {
+    display: block;
+    margin-bottom: 5px;
+    color: #000; /* Black for labels */
+    font-weight: bold;
+}
+
+/* Input field styling */
+input[type="text"],
+input[type="password"],
+input[type="tel"] {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #333; /* Black border for input fields */
+    border-radius: 4px;
+    box-sizing: border-box;
+    font-size: 1rem;
+    color: #333;
+}
+
+input[type="text"]:focus,
+input[type="password"]:focus,
+input[type="tel"]:focus {
+    outline: none;
+    border-color: #ff7043; /* Orange border on focus */
+    box-shadow: 0 0 8px rgba(255, 112, 67, 0.2);
+}
+
+/* Checkbox styling */
+input[type="checkbox"] {
+    margin-right: 10px; /* Space between checkbox and label */
+    vertical-align: middle; /* Align vertically with text */
+}
+
+input[type="checkbox"]:focus {
+    outline: none;
+}
+
+/* Button styling */
+button {
+    background-color: #ff7043; /* Orange for the button */
+    color: white;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    width: 100%;
+    font-size: 1rem;
+    transition: background-color 0.3s;
+}
+
+button:hover {
+    background-color: #e64a19; /* Darker orange on hover */
+}
+
+/* Link styling */
+a {
+    color: #ff7043; /* Orange links */
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+/* Mobile responsive styling */
+@media (max-width: 600px) {
+    form {
+        width: 100%;
+        padding: 15px;
+    }
+
+    h1 {
+        font-size: 1.5rem;
+    }
+
+    h2 {
+        font-size: 1.2rem;
+    }
+}

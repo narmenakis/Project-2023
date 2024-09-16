@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="el">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Home Page</title>
+    <!--  Leaflet CSS and JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+
+    <!-- add MarkerCluster CSS and JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
+    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="css/admin.css">
+
+    <style>
+        #map {
+            height: 500px;
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="topnav">
+        <a href="homepageadmin.html">Home</a>
+        <a href="storage.php">Storage</a>
+        <a href="statistics.html">Statistics</a>
+        <a href="addrescuer.html">Add Rescuer</a>
+        <a href="announcements.php">Announcements</a>
+        <a href="../signup-login/logout.php">Log Out</a>
+    </div>
+    <h1 class="h1-new">Admin Map View</h1>
+
+    <div id="map"></div>
+    <p>
+        Current Location:
+        <span id="location">Define Location...</span>
+    </p>
+    <button id="saveLocation">Save Location</button>
+
+
+
+    <script>
+        // A function to calculate the distance between two locations
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371e3; // Earth radius in meters
+            const φ1 = lat1 * Math.PI / 180;
+            const φ2 = lat2 * Math.PI / 180;
+            const Δφ = (lat2 - lat1) * Math.PI / 180;
+            const Δλ = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+                Math.cos(φ1) * Math.cos(φ2) *
+                Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+            return R * c; // Distance in meters
+        }
+
+        // Initialize the map centered on a specific location (e.g., the city of Patras)
+        var map = L.map('map').setView([38.2466, 21.7346], 13);
+
+        // Add OpenStreetMap layer
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // Define custom icons for different types of users and tasks
+        var rescuerIcon = L.icon({
+            iconUrl: 'transport.png',
+            iconSize: [32, 32],
+            iconAnchor: [16, 32],
+        });
+
+        var offerPendingIcon = L.icon({
+            iconUrl: 'offerpending.png',
+            iconSize: [32, 32],
+            iconAnchor: [16, 32],
+        });
+
+        var requestPendingIcon = L.icon({
+            iconUrl: 'requestpending.png',
+            iconSize: [32, 32],
+            iconAnchor: [16, 32],
+        });
+
+        var offerAcquiredIcon = L.icon({
+            iconUrl: 'offer.png',
+            iconSize: [32, 32],
+            iconAnchor: [16, 32],
+        });
+
+        var requestAcquiredIcon = L.icon({
+            iconUrl: 'request.png',
+            iconSize: [32, 32],
+            iconAnchor: [16, 32],
+        });
+
+        var blackIcon = L.icon({
+            iconUrl: 'storagee.png',
+            iconSize: [40, 40],
+            iconAnchor: [20, 36],
+        });
+
+        // Fetch and display user locations (rescuer, citizens)
+        fetch('fetch_user_locations.php')
+            .then(response => response.json())
+            .then(data => {
+                data.users.forEach(user => {
+                    let markerType = '';
+                    let icon;
+                    let popupContent;
+
+                    // Check if the user is a citizen and has transactions
+                    if (user.authentication_token === 'citizen' && user.transactions) {
+                        const transaction = user.transactions;
+
+                        if (transaction.type === 'offer') {
+                            if (transaction.status === 'pending') {
+                                markerType = 'pending_offer';
+                                icon = offerPendingIcon;
+                            } else if (transaction.status === 'acquired') {
+                                markerType = 'acquired_offer';
+                                icon = offerAcquiredIcon;
+                            }
+                        } else if (transaction.type === 'request') {
+                            if (transaction.status === 'pending') {
+                                markerType = 'pending_request';
+                                icon = requestPendingIcon;
+                            } else if (transaction.status === 'acquired') {
+                                markerType = 'acquired_request';
+                                icon = requestAcquiredIcon;
+                            }
+                        }
+
+                        fetch('fetch_storage_location.php')
+                            .then(response => response.json())
+                        popupContent = `
+                    <b>Citizen:</b> ${user.username}<br>
+                    <b>Phone:</b> ${user.phone}<br>
+                    <b>Transaction Date:</b> ${transaction.transaction_date}<br>
+                    <b>Item:</b> ${user.item_name}<br>
+                    <b>Amount:</b> ${transaction.requested_item_amount}<br>
+                `;
+                    }
+                    // Check if the user is a rescuer
+                    else if (user.authentication_token === 'rescuer') {
+                        markerType = 'rescuer';
+                        icon = rescuerIcon;
+                        popupContent = `
+                    <b>Rescuer:</b> ${user.username}<br>
+                    <b>Phone:</b> ${user.phone}
+                `;
+                    }
+
+                    // Add marker to the map
+                    if (markerType) {
+                        addMarker(user.latitude, user.longitude, icon, popupContent, markerType);
+                    }
+                });
+            })
+            .catch(error => console.error('Error fetching user locations:', error));
+
+        // Function to add markers to the map with popup content
+        function addMarker(latitude, longitude, icon, popupContent, type) {
+            const marker = L.marker([latitude, longitude], { icon: icon });
+            marker.bindPopup(popupContent);
+            marker.addTo(map);
+        }
+    </script>
+
+
+    <script>
+        let draggableMarker;
+
+        // initialize marker for user_coordinates_id=15 and drag and drop
+        fetch('fetch_storage.php?user_coordinates_id=15')
+            .then(response => response.json())
+            .then(userData => {
+                const { latitude, longitude } = userData;
+
+                //create draggable marker
+                draggableMarker = L.marker([latitude, longitude], {
+                    icon: blackIcon,
+                    draggable: true
+                }).addTo(map);
+
+                // show initial destination to "Current Location"
+                document.getElementById('location').textContent = `Lat: ${latitude}, Lng: ${longitude}`;
+
+                // add popup to marker
+                draggableMarker.bindPopup("<b>Storage</b><br>Move me to update location!");
+
+                //update "Current Location" to UI when marker moving
+                draggableMarker.on('dragend', function (event) {
+                    const position = event.target.getLatLng();
+                    const newLat = position.lat;
+                    const newLng = position.lng;
+
+                    // update "Current Location" to UI only
+                    document.getElementById('location').textContent = `Lat: ${newLat}, Lng: ${newLng}`;
+                });
+            })
+            .catch(error => console.error('Error fetching user location:', error));
+
+        // save location when click "Save Location"
+        document.getElementById('saveLocation').addEventListener('click', function () {
+            var locationText = document.getElementById('location').textContent;
+
+            if (locationText !== "Define Location...") {
+                var position = draggableMarker.getLatLng(); // get coordinates from draggableMarker
+                const lat = position.lat;
+                const lng = position.lng;
+
+                // send new coordinates to backend
+                fetch('update_location.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `user_coordinates_id=15&lat=${lat}&lng=${lng}`
+                })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.text();
+                    })
+                    .then(data => {
+                        alert('Location saved successfully!');
+                    })
+                    .catch(error => {
+                        console.error('Error saving location:', error);
+                    });
+            } else {
+                alert("No location defined!");
+            }
+        });
+
+        
+    </script>
+</body>
+
+</html>

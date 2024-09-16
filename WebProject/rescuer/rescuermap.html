@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="el">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rescuer Map Page</title>
+    <!-- add Leaflet CSS and JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+
+    <!-- add MarkerCluster CSS and JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
+    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="css/rescuer.css">
+    <style>
+        #map {
+            height: 500px;
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="topnav">
+        <a href="homepagerescuer.html">Home</a>
+        <a href="rescuermap.html">Rescuer Map</a>
+        <a href="../signup-login/logout.php">Log Out</a>
+    </div>
+    <h1 class="h1-new">Rescuer Map</h1>
+
+    <div id="map"></div>
+    <p>
+        Current Location:
+        <span id="location">Define Location...</span>
+    </p>
+    <button id="saveLocation">Save Location</button>
+
+
+    <button id="load-button" disabled class="disabled-button">LOAD VEHICLE</button>
+    <p id="load-unavailable" style="display:none;color:red;"></p>
+
+    <button id="unload-button" disabled class="disabled-button">STORE VEHICLE</button>
+    <p id="unload-unavailable" style="display:none;color:red;"></p>
+
+    <table id="itemsTable">
+        <thead>
+            <tr>
+                <th>Item ID</th>
+                <th>Item Name</th>
+                <th>Quantity</th>
+            </tr>
+        </thead>
+        <tbody id="itemsTableBody">
+        </tbody>
+    </table>
+
+    <!-- table of results -->
+    <table id="VehicleItemsTable">
+        <thead>
+            <tr>
+                <th>Vehicle ID</th>
+                <th>Item ID</th>
+                <th>Quantity</th>
+            </tr>
+        </thead>
+        <tbody id="VehicleItemsBody">
+        </tbody>
+
+        <div>
+    </table>
+    <h1 class="h1-new">Tasks</h1>
+    <table id="transactions-table" cellpadding="10">
+        <thead>
+            <tr>
+                <th>Citizen Name</th>
+                <th>Citizen Surname</th>
+                <th>Phone</th>
+                <th>Transaction Date</th>
+                <th>Item Name</th>
+                <th>Item Amount</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+
+    <script>
+        function completeTransaction(transactionId) {
+            // send POST request to update_transaction.php
+            fetch('update_transaction.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `transaction_id=${transactionId}&vehicle_id=${sessionUserId}`, 
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json(); 
+                })
+                .then(data => {
+                    if (data.success) {
+                        alert('Transaction marked as complete!');
+                        // remove transaction row
+                        document.querySelector(`#transaction-row-${transactionId}`).remove();
+                    } else {
+                        alert('Error: ' + data.error); 
+                    }
+                })
+                .catch(error => {
+                    console.error('Error completing transaction:', error); 
+                    alert('There was a problem completing the transaction.');
+                });
+        }
+
+        // enable "COMPLETE" button
+        function enableCompleteButton(transactionId) {
+            document.querySelector(`#action-btn-${transactionId} .complete-btn`).addEventListener('click', function () {
+                completeTransaction(transactionId); // call function
+            });
+        }
+
+        //calculate distance between two coordinates
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371e3; // R of earth
+            const φ1 = lat1 * Math.PI / 180; 
+            const φ2 = lat2 * Math.PI / 180;
+            const Δφ = (lat2 - lat1) * Math.PI / 180;
+            const Δλ = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+                Math.cos(φ1) * Math.cos(φ2) *
+                Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+            return R * c; // meters
+        }
+    </script>
+
+    <script>
+        // initialize map (show patras center)
+        var map = L.map('map').setView([38.2466, 21.7346], 13);
+
+        // add OpenStreetMap layer
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // icons of map
+        var greenIcon = L.icon({
+            iconUrl: 'rescuer.png',
+            iconSize: [45, 45],
+            iconAnchor: [23, 45],
+        });
+
+
+        var blackIcon = L.icon({
+            iconUrl: 'storagee.png',
+            iconSize: [40, 40],
+            iconAnchor: [20, 36],
+        });
+
+        //markers offer (pending)
+        var pendingofferIcon = L.icon({
+            iconUrl: 'offerpending.png',
+            iconSize: [45, 45],
+            iconAnchor: [23, 45],
+        });
+
+        //markers request (pending)
+        var pendingrequestIcon = L.icon({
+            iconUrl: 'requestpending.png',
+            iconSize: [45, 45],
+            iconAnchor: [23, 45],
+        });
+
+
+        //markers acquired offer (user_id=?)
+        var acquiredofferIcon = L.icon({
+            iconUrl: 'offer.png',
+            iconSize: [45, 45],
+            iconAnchor: [23, 45],
+        });
+
+        //markers acquired request (user_id=?)
+        var acquiredrequestIcon = L.icon({
+            iconUrl: 'request.png',
+            iconSize: [45, 45],
+            iconAnchor: [23, 45],
+        });
+
+        // calculate dinstance with Haversine Formula
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371e3; 
+            const φ1 = lat1 * Math.PI / 180;
+            const φ2 = lat2 * Math.PI / 180;
+            const Δφ = (lat2 - lat1) * Math.PI / 180;
+            const Δλ = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+                Math.cos(φ1) * Math.cos(φ2) *
+                Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+            return R * c; 
+        }
+
+        // initialize coordinates marker for storage-rescuer connection
+        var marker1, marker2;
+
+        // create a dictionary to save the 4 different types of markers 
+        let markersByLocation = {};
+
+        // addmarkers GROUPING by different types the markers
+        function addMarker(latitude, longitude, icon, popupContent, type) {
+            const key = `${latitude},${longitude},${type}`;
+
+            if (markersByLocation[key]) {
+                // if marker already exists on that location with the same type, add the info to popup
+                markersByLocation[key].popupContent += '<br>' + popupContent;
+
+                // update popup of existing marker 
+                markersByLocation[key].setPopupContent(markersByLocation[key].popupContent);
+            } else {
+                //else, create new marker and save to dictionary
+                const newMarker = L.marker([latitude, longitude], { icon: icon });
+                newMarker.popupContent = popupContent;
+                markersByLocation[key] = newMarker;
+
+                // add marker on marker
+                newMarker.addTo(map);
+
+                // connect first popup with the marker
+                newMarker.bindPopup(popupContent);
+            }
+        }
+
+        // fetch locations (rescuers, citizen)
+        fetch('fetch_user_locations.php')
+            .then(response => response.json())
+            .then(data => {
+                data.forEach(user => {
+                    let markerType = '';
+                    let icon;
+                    let popupContent;
+
+                    // check citizens transactions
+                    if (user.authentication_token === 'citizen') {
+                        if (user.transactions) {
+
+                            console.log('Transaction type:', user.transactions.type);
+                            console.log('Transaction status:', user.transactions.status);
+
+
+                            const transaction = user.transactions;
+                            console.log('Transaction type:', user.transactions.type);
+                            console.log('Transaction status:', user.transactions.status);
+
+                            console.log('Transaction type:', transaction.type);
+                            console.log('Transaction status:', transaction.status);
+
+                            // offer
+                            if (transaction.type === 'offer') {
+                                if (transaction.status === 'pending') {
+                                    // offer pending
+                                    markerType = 'pending_offer';
+                                    icon = pendingofferIcon; 
+                                } else if (transaction.status === 'acquired') {
+                                    //offer acquired
+                                    markerType = 'acquired_offer';
+                                    icon = acquiredofferIcon; 
+                                }
+                            }
+
+                            // request
+                            else if (transaction.type === 'request') {
+                                if (transaction.status === 'pending') {
+                                    // request pending
+                                    markerType = 'pending_request';
+                                    icon = pendingrequestIcon; 
+                                } else if (transaction.status === 'acquired') {
+                                    // request acquired
+                                    markerType = 'acquired_request';
+                                    icon = acquiredrequestIcon; 
+                                }
+                            }
+                        };
+                    }
+                    // check rescuers
+                    else if (user.authentication_token === 'rescuer') {
+                        markerType = 'rescuer';
+                        icon = greenIcon; 
+                    }
+
+                    // create proper popup content 
+                    if (markerType === 'pending_offer') {
+                        popupContent = `
+       
+        <b>Citizen:</b> ${user.username}<br>
+        <b>Phone:</b> ${user.phone}<br>
+          <b>Offer Date:</b> ${user.transactions.starting_date}<br>
+        <b>Transaction Date:</b> ${user.transactions.transaction_date}<br>
+        <b>Item Name:</b> ${user.item_name}<br>
+        <b>Amount Offered:</b> ${user.transactions.requested_item_amount}<br>
+         <button onclick="takeOverTransaction(${user.transactions.transaction_id})">TAKE OVER</button><br>
+    `;
+                    } else if (markerType === 'acquired_offer') {
+                        popupContent = `
+        <b>Citizen:</b> ${user.username}<br>
+        <b>Phone:</b> ${user.phone}<br>
+         <b>Offer Date:</b> ${user.transactions.starting_date}<br>
+        <b>Transaction Date:</b> ${user.transactions.transaction_date}<br>
+        <b>Item Name:</b> ${user.item_name}<br>
+        <b>Amount Acquired:</b> ${user.transactions.requested_item_amount}<br>
+    `;
+                    } else if (markerType === 'pending_request') {
+                        popupContent = `
+        <b>Citizen:</b> ${user.username}<br>
+        <b>Phone:</b> ${user.phone}<br>
+         <b>Request Date:</b> ${user.transactions.starting_date}<br>
+        <b>Transaction Date:</b> ${user.transactions.transaction_date}<br>
+        <b>Item Requested:</b> ${user.item_name}<br>
+        <b>Amount Requested:</b> ${user.transactions.requested_item_amount}<br>
+         <button onclick="takeOverTransaction(${user.transactions.transaction_id})">TAKE OVER</button><br>
+    `;
+                    } else if (markerType === 'acquired_request') {
+                        popupContent = `
+        <b>Citizen:</b> ${user.username}<br>
+        <b>Phone:</b> ${user.phone}<br>
+         <b>Request Date:</b> ${user.transactions.starting_date}<br>
+        <b>Transaction Date:</b> ${user.transactions.transaction_date}<br>
+        <b>Item Name:</b> ${user.item_name}<br>
+        <b>Amount Acquired:</b> ${user.transactions.requested_item_amount}<br>
+    `;
+                    } else if (markerType === 'rescuer') {
+                        popupContent = `
+        <b>Rescuer:</b> ${user.username}<br>
+        <b>Phone:</b> ${user.phone}
+    `;
+                    } else {
+                        popupContent = `
+        <b>Unknown type for:</b> ${user.username}
+    `;
+                    }
+
+                    //add marker to proper location
+                    addMarker(user.latitude, user.longitude, icon, popupContent, markerType);
+                });
+            })
+            .catch(error => console.error('Error fetching user locations:', error));
+
+        // save rescuer coordinates
+        document.getElementById('saveLocation').addEventListener('click', function () {
+            var position = marker2.getLatLng();
+            var confirmSave = confirm('Are you sure you want to save this location?\nLat: ' + position.lat + ', Lng: ' + position.lng);
+
+            if (confirmSave) {
+                var xhr = new XMLHttpRequest();
+                xhr.open('POST', 'save_location.php', true);
+                xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+                xhr.onreadystatechange = function () {
+                    if (xhr.readyState === 4 && xhr.status === 200) {
+                        alert('Location saved successfully!');
+                    }
+                };
+                xhr.send('lat=' + position.lat + '&lng=' + position.lng);
+            }
+        });
+
+        // fetch location of citizen and rescuer
+        fetch('fetch_user_coordinates.php') 
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    console.error(data.error);
+                    alert('Error fetching user coordinates');
+                } else {
+                    const userLat = data.latitude;
+                    const userLng = data.longitude;
+                    const sessionUserId = data.user_id;  // definition of sessionUserId server reply
+                    const userCoordinatesId = data.user_coordinates_id; //userCoordinatesId
+
+                    console.log('Rescuer Coordinates:', userLat, userLng);
+
+                    //add marker for rescuer (marker2)
+                    marker2 = L.marker([userLat, userLng], { icon: greenIcon, draggable: true }).addTo(map);
+
+                    // update location when rescuer marker is moving
+                    marker2.on('dragend', function (e) {
+                        var position = marker2.getLatLng();
+                        document.getElementById('location').textContent = 'Lat: ' + position.lat + ', Lng: ' + position.lng;
+                    });
+
+                    // get storage location
+                    fetch('fetch_storage_location.php')
+                        .then(response => response.json())
+                        .then(warehouse => {
+                            console.log('Storage Coordinates:', warehouse.latitude, warehouse.longitude);
+
+                            // add storage marker (marker1)
+                            marker1 = L.marker([warehouse.latitude, warehouse.longitude], { icon: blackIcon }).addTo(map);
+
+                            // create polyline for connection of 2 markers
+                            var latlngs = [
+                                marker1.getLatLng(), // storage coordinates
+                                marker2.getLatLng()  // rescuer coordinates
+                            ];
+
+                            const distance = calculateDistance(userLat, userLng, warehouse.latitude, warehouse.longitude);
+                            console.log('Distance between rescuer and storage:', distance.toFixed(2), 'meters');
+
+                            if (distance <= 100) {
+                                document.getElementById('load-button').disabled = false;
+                                document.getElementById('load-button').classList.remove('disabled-button');
+                                document.getElementById('load-unavailable').style.display = 'none';
+                                document.getElementById('unload-button').disabled = false;
+                                document.getElementById('unload-button').classList.remove('disabled-button');
+                                document.getElementById('unload-unavailable').style.display = 'none';
+
+                                document.getElementById('load-button').addEventListener('click', function () {
+                                    fetch('load_items.php')
+                                        .then(response => response.json())
+                                        .then(items => {
+                                            const tableBody = document.getElementById('itemsTableBody');
+                                            tableBody.innerHTML = ''; // clear previous data
+
+                                            items.forEach(item => {
+                                                const row = document.createElement('tr');
+                                                const idCell = document.createElement('td');
+                                                const nameCell = document.createElement('td');
+                                                const quantityCell = document.createElement('td');
+                                                const inputCell = document.createElement('td');
+                                                const buttonCell = document.createElement('td');
+
+                                                idCell.textContent = item.item_id;
+                                                nameCell.textContent = item.item_name;
+                                                quantityCell.textContent = item.quantity;
+
+                                                const quantityInput = document.createElement('input');
+                                                quantityInput.type = 'number';
+                                                quantityInput.name = `quantity-${item.item_id}`;
+                                                quantityInput.min = -item.quantity;
+                                                quantityInput.max = -1;
+                                                quantityInput.placeholder = 'Enter';
+
+                                                const updateButton = document.createElement('button');
+                                                updateButton.textContent = 'Update';
+                                                updateButton.classList.add('update-button');
+
+                                                // use of sessionUserId & userCoordinatesId
+
+                                                updateButton.addEventListener('click', function () {
+                                                    const requestedQuantity = parseInt(quantityInput.value);
+                                                    const itemId = item.item_id; //item_id 
+                                                    const userCoordinatesLat = userLat; //user data coordinates
+                                                    const userCoordinatesLng = userLng;
+
+                                                    //check if quantity is not 0 and doesnt get > than previous one
+                                                    if (requestedQuantity !== 0 && Math.abs(requestedQuantity) <= item.quantity) {
+                                                        fetch('add_quantity.php', {
+                                                            method: 'POST',
+                                                            headers: {
+                                                                'Content-Type': 'application/x-www-form-urlencoded'
+                                                            },
+                                                            body: `item_id=${itemId}&requested_quantity=${requestedQuantity}&user_coordinates_lat=${userCoordinatesLat}&user_coordinates_lng=${userCoordinatesLng}`
+                                                        })
+                                                            .then(response => response.json()) 
+                                                            .then(data => {
+                                                                if (data.success) {
+                                                                    alert('Quantity updated successfully!');
+
+                                                                    //reload page
+                                                                    window.location.reload();
+                                                                } else {
+                                                                    alert('Error updating quantity: ' + data.error);
+                                                                }
+                                                            })
+                                                            .catch(error => console.error('Error updating quantity:', error));
+                                                    } else {
+                                                        alert("Please enter a valid quantity.");
+                                                    }
+                                                });
+
+                                                // add action to button "UNLOAD ITEMS"
+                                                // remove eventlistener
+                                                document.getElementById('unload-button').removeEventListener('click', unloadItems);
+
+                                                // add eventlistener "unloadItems"
+                                                document.getElementById('unload-button').addEventListener('click', unloadItems);
+
+
+
+                                                //unloadItems function
+                                                function unloadItems() {
+                                                    console.log('Unload button clicked'); 
+
+                                                    fetch('movetostorage.php', {
+                                                        method: 'POST',
+                                                        headers: {
+                                                            'Content-Type': 'application/x-www-form-urlencoded'
+                                                        },
+                                                        body: `user_id=${sessionUserId}`  // sends rescuer user_id 
+                                                    })
+                                                        .then(response => response.text())
+                                                        .then(data => {
+                                                            try {
+                                                                data = JSON.parse(data);  
+                                                                if (data.success) {
+                                                                    console.log('Success detected');
+                                                                    alert('Items unloaded successfully!');
+
+                                                                    window.location.reload();  
+                                                                } else {
+                                                                    alert('Error unloading items: ' + data.error);
+                                                                }
+                                                            } catch (error) {
+                                                                console.error('Invalid JSON format:', data);  
+                                                            }
+                                                        })
+                                                        .catch(error => {
+                                                            console.error('Error unloading items:', error);
+                                                        });
+                                                }
+
+                                                inputCell.appendChild(quantityInput);
+                                                buttonCell.appendChild(updateButton);
+                                                row.appendChild(idCell);
+                                                row.appendChild(nameCell);
+                                                row.appendChild(quantityCell);
+                                                row.appendChild(inputCell);
+                                                row.appendChild(buttonCell);
+                                                tableBody.appendChild(row);
+                                            });
+                                        })
+                                        .catch(error => console.error('Error loading storage items:', error));
+                                });
+                            }
+                        })
+                        .catch(error => console.error('Error fetching storage location:', error));
+                }
+            })
+            .catch(error => console.error('Error fetching user coordinates:', error));
+
+    </script>
+
+    <script>
+        fetch('vehicleitems.php', {
+            method: 'GET',  
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+            .then(response => response.json())  
+            .then(data => {
+                const resultsBody = document.getElementById('VehicleItemsBody');
+                resultsBody.innerHTML = '';  // clear table before adding new items
+
+                //show results
+                if (data.length === 0) {
+                    resultsBody.innerHTML = '<tr><td colspan="3">No results found</td></tr>';
+                } else {
+                    data.forEach(item => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                    <td>${item.vehicle_id}</td>
+                    <td>${item.item_id}</td>
+                    <td>${item.quantity}</td>
+                `;
+                        resultsBody.appendChild(row);
+                    });
+                }
+            })
+            .catch(error => console.error('Error:', error));
+
+    </script>
+
+    <script>
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371e3; 
+            const φ1 = lat1 * Math.PI / 180; 
+            const φ2 = lat2 * Math.PI / 180;
+            const Δφ = (lat2 - lat1) * Math.PI / 180;
+            const Δλ = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+                Math.cos(φ1) * Math.cos(φ2) *
+                Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+            return R * c; 
+        }
+
+        // update transaction table with status 'acquired'
+        function updateTransactionsTable(transactions, rescuerLat, rescuerLng) {
+            const tableBody = document.querySelector('#transactions-table tbody');
+            tableBody.innerHTML = '';  
+
+            transactions.forEach(transaction => {
+                const citizenLat = transaction.latitude;  
+                const citizenLng = transaction.longitude;
+
+
+                // check coordinates
+                console.log(`Citizen Coordinates: Lat: ${citizenLat}, Lng: ${citizenLng}`);
+                console.log(`Rescuer Coordinates: Lat: ${rescuerLat}, Lng: ${rescuerLng}`);
+
+                // distance between rescuer and citizen
+                const distance = calculateDistance(rescuerLat, rescuerLng, citizenLat, citizenLng);
+             
+                function drawLineBetweenRescuerAndCitizen(rescuerLat, rescuerLng, citizenLat, citizenLng) {
+                    // create connecting line (Polyline) between acquired citizens and rescuer
+                    var latlngs = [
+                        [rescuerLat, rescuerLng], 
+                        [citizenLat, citizenLng] 
+                    ];
+                
+                    // add blue line on map
+                    var polyline = L.polyline(latlngs, { color: 'blue' }).addTo(map);
+                }
+
+                drawLineBetweenRescuerAndCitizen(rescuerLat, rescuerLng, citizenLat, citizenLng);
+                
+                // create new row for each transaction
+                const row = `
+            <tr id="transaction-row-${transaction.transaction_id}">
+                <td>${transaction.citizen_name}</td>
+                <td>${transaction.citizen_surname}</td>
+                <td>${transaction.citizen_phone}</td>
+                <td>${transaction.transaction_date}</td>
+                <td>${transaction.item_name}</td>
+                <td>${transaction.requested_item_amount}</td>
+                <td>${distance.toFixed(2)} meters</td>  <!-- Εμφανίζει την απόσταση σε μέτρα -->
+                <td id="action-btn-${transaction.transaction_id}">
+                    <button class="complete-btn" data-id="${transaction.transaction_id}" disabled>COMPLETE</button>
+                    <button class="cancel-btn" data-id="${transaction.transaction_id}">CANCEL</button>
+                </td>
+            </tr>
+        `;
+
+                tableBody.insertAdjacentHTML('beforeend', row);
+
+                //activate button "COMPLETE" if distance ≤ 50m
+                if (distance <= 50) {
+                    document.querySelector(`#action-btn-${transaction.transaction_id} .complete-btn`).disabled = false;
+                }
+            });
+        }
+
+        function fetchAcquiredTransactions(rescuerLat, rescuerLng) {
+            fetch('acquiredcoordinates.php') 
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // update table (transaction and coordinates)
+                        updateTransactionsTable(data.transactions, rescuerLat, rescuerLng);
+                    } else {
+                        console.error('No acquired transactions found');
+                    }
+                })
+                .catch(error => console.error('Error fetching transactions:', error));
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            // get user coordinates
+            fetch('fetch_user_coordinates.php')  //endpoint returns rescuer coordinates
+                .then(response => response.json())
+                .then(rescuerData => {
+                    const rescuerLat = rescuerData.latitude;
+                    const rescuerLng = rescuerData.longitude;
+
+                    //acquired transactions and calculate distance
+                    fetchAcquiredTransactions(rescuerLat, rescuerLng);
+                })
+                .catch(error => {
+                    console.error('Error fetching rescuer coordinates:', error);
+                });
+        });
+
+        function takeOverTransaction(transactionId, sessionUserId) {
+            if (confirm('Are you sure you want to take over this transaction?')) {
+                // POST request
+                fetch('update_transaction.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: `transaction_id=${encodeURIComponent(transactionId)}}`
+                    // send transaction_id to PHP script
+                })
+                    .then(response => response.json()) 
+                    .then(data => {
+                        if (data.success) {
+                            alert('Transaction successfully taken over!');
+
+                            // update of active tasks
+                            fetchAcquiredTransactions(sessionUserId); // reloads acquired transactions (previous)
+                        } else {
+                            alert('Error: ' + data.error);
+                        }
+                    })
+                    .catch(error => console.error('Error:', error));
+            }
+        }
+
+        document.addEventListener('click', function(event) {
+            if (event.target.classList.contains('take-over-btn')) {
+                const transactionId = event.target.getAttribute('data-id');
+                takeOverTransaction(transactionId, sessionUserId);
+            }
+        });
+
+        // add eventlistener for TAKE OVER button
+        document.querySelectorAll('.take-over-btn').forEach(button => {
+            button.addEventListener('click', function () {
+                const transactionId = this.getAttribute('data-id'); // get transaction_id for button
+                takeOverTransaction(transactionId); // function
+            });
+        });
+
+
+        document.addEventListener('DOMContentLoaded', function () {
+            // citizen coordinates
+            fetch('fetch_user_coordinates.php')
+                .then(response => response.json())
+                .then(rescuerData => {
+                    const rescuerLat = rescuerData.latitude;
+                    const rescuerLng = rescuerData.longitude;
+
+                    //get acquired transactions and calculate distance
+                    fetchAcquiredTransactions(rescuerLat, rescuerLng);
+                })
+                .catch(error => {
+                    console.error('Error fetching rescuer coordinates:', error);
+                });
+        });
+    </script>
+</body>
+</html>
